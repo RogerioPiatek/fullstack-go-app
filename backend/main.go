@@ -33,11 +33,11 @@ func main() {
 
 	//create router
 	router := mux.NewRouter()
-	router.HandleFunc("/api/go/users", getUsers(db)).Methods("get")
-	// router.HandleFunc("/api/go/users", createUser(db)).methods("post")
-	// router.HandleFunc("/api/go/users/{id}", getUser(db)).methods("get")
-	// router.HandleFunc("/api/go/users/{id}", updateUser(db)).methods("put")
-	// router.HandleFunc("/api/go/users/{id}", deleteUser(db)).methods("delete")
+	router.HandleFunc("/api/go/users", getUsers(db)).Methods("GET")
+	// router.HandleFunc("/api/go/users", createUser(db)).Methods("POST")
+	router.HandleFunc("/api/go/users/{id}", getUser(db)).Methods("GET")
+	// router.HandleFunc("/api/go/users/{id}", updateUser(db)).Methods("PUT")
+	// router.HandleFunc("/api/go/users/{id}", deleteUser(db)).Methods("DELETE")
 
 	//wrap the router with CORS and JSON content type middlewares
 	enhancedRouter := enableCORS(jsonContentTypeMiddleware(router))
@@ -97,4 +97,22 @@ func getUsers(db *sql.DB) http.HandlerFunc {
 
 		json.NewEncoder(w).Encode(users)
 	}
+}
+
+//get user by id
+func getUser(db *sql.DB) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		
+		var u User
+		err := db.QueryRow("SELECT * FROM users WHERE id = $1", id).Scan(&u.Id, &u.Name, &u.Email)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return 
+		}
+
+		json.NewEncoder(w).Encode(u)
+	}
+
 }
