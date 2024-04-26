@@ -34,7 +34,7 @@ func main() {
 	//create router
 	router := mux.NewRouter()
 	router.HandleFunc("/api/go/users", getUsers(db)).Methods("GET")
-	// router.HandleFunc("/api/go/users", createUser(db)).Methods("POST")
+	router.HandleFunc("/api/go/users", createUser(db)).Methods("POST")
 	router.HandleFunc("/api/go/users/{id}", getUser(db)).Methods("GET")
 	// router.HandleFunc("/api/go/users/{id}", updateUser(db)).Methods("PUT")
 	// router.HandleFunc("/api/go/users/{id}", deleteUser(db)).Methods("DELETE")
@@ -114,5 +114,19 @@ func getUser(db *sql.DB) http.HandlerFunc {
 
 		json.NewEncoder(w).Encode(u)
 	}
+}
 
+//create user
+func createUser(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var u User 
+		json.NewDecoder(r.Body).Decode(&u)
+
+		err := db.QueryRow("INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id", u.Name, u.Email).Scan(&u.Id)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		json.NewEncoder(w).Encode(u)
+	}
 }
