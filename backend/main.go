@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -32,13 +33,11 @@ func main() {
 
 	//create router
 	router := mux.NewRouter()
-	/*
-	router.handlefunc("/api/go/users", getusers(db)).methods("get")
-	router.handlefunc("/api/go/users", createuser(db)).methods("post")
-	router.handlefunc("/api/go/users/{id}", getuser(db)).methods("get")
-	router.handlefunc("/api/go/users/{id}", updateuser(db)).methods("put")
-	router.handlefunc("/api/go/users/{id}", deleteuser(db)).methods("delete")
-	*/
+	router.HandleFunc("/api/go/users", getUsers(db)).Methods("get")
+	// router.HandleFunc("/api/go/users", createUser(db)).methods("post")
+	// router.HandleFunc("/api/go/users/{id}", getUser(db)).methods("get")
+	// router.HandleFunc("/api/go/users/{id}", updateUser(db)).methods("put")
+	// router.HandleFunc("/api/go/users/{id}", deleteUser(db)).methods("delete")
 
 	//wrap the router with CORS and JSON content type middlewares
 	enhancedRouter := enableCORS(jsonContentTypeMiddleware(router))
@@ -73,4 +72,29 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	})
+}
+
+//get all users
+func getUsers(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rows, err := db.Query("SELECT * FROM users")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+
+		users := []User{}
+		for rows.Next() {
+			var u User
+			if err := rows.Scan(&u.Id, &u.Name, &u.Email); err != nil {
+				log.Fatal(err)
+			}
+			users = append(users, u)
+		}
+		if err := rows.Err(); err != nil {
+			log.Fatal(err)
+		}
+
+		json.NewEncoder(w).Encode(users)
+	}
 }
