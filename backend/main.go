@@ -27,7 +27,7 @@ func main() {
 	defer db.Close()
 
 	//create table if not exists
-	_, err = db.Exec("CREATE TABLE users (id SERIAL PRIMARY KEY, name TEXT, email TEXT)")
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT, email TEXT)")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func updateUser(db *sql.DB) http.HandlerFunc {
 			log.Fatal(err)
 		}
 
-		//Retrieve the updated user data from the database 
+		//Retrieve the updated user data from the database
 		var updatedUser User
 		err = db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", id).Scan(&updatedUser.Id, &updatedUser.Name, &updatedUser.Email)
 		if err != nil {
