@@ -87,6 +87,16 @@ const UserInterface = ({ backendName }: UserInterfaceProps) => {
     }
   };
 
+  // Delete a user
+  const deleteUser = async (userId: number) => {
+    try {
+      await axios.delete(`${apiUrl}/api/${backendName}/users/${userId}`);
+      setUsers(users.filter((user) => user.id !== userId));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
+
   return (
     <div
       className={`user-interface ${bgColor} ${backendName} w-full max-w-md p-4 my-4 rounded shadow`}
@@ -169,7 +179,7 @@ const UserInterface = ({ backendName }: UserInterfaceProps) => {
           >
             <CardComponent card={user} />
             <button
-              // onClick={() => deleteUser(user.id)}
+              onClick={() => deleteUser(user.id)}
               className={`${btnColor} text-white py-2 px-4 rounded`}
             >
               Delete User
